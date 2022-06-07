@@ -3,14 +3,16 @@ Shader "Unlit/PlanetRings"
     Properties
     {
         _RingsColor("Rings Color", COLOR) = (0.1, 0.1, 0.1, 0.1)
-        _InnerRadius("Inner Radius", float) = 0.08
-        _OuterRadius("Outer Radius", float) = 0.125
+        _InnerRadius("Inner Radius", Range(0, 0.5)) = 0.08
+        _OuterRadius("Outer Radius", Range(0, 0.5)) = 0.125
     }
 
     SubShader
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
+
+        Cull off
 
         Pass
         {
