@@ -21,6 +21,9 @@ public class CameraRenderer
         _camera = camera;
         _context = context;
 
+
+        PrepareForSceneWindow();
+
         if (!_camera.TryGetCullingParameters(out var parameters))
             return;
 
@@ -29,6 +32,8 @@ public class CameraRenderer
         Settings();
 
         DrawVisible();
+        DrawUnsupportedShaders();
+        
 #if UNITY_EDITOR
         DrawGizmos();
 #endif
@@ -59,7 +64,7 @@ public class CameraRenderer
     private void Settings()
     {
         _commandBuffer.ClearRenderTarget(true, true, Color.clear);
-        _commandBuffer.BeginSample(_bufferName);
+        _commandBuffer.BeginSample(_camera.name);
         ExecuteCommandBuffer();
         _context.SetupCameraProperties(_camera);
     }
@@ -131,8 +136,12 @@ public class CameraRenderer
         var filteringSettings = FilteringSettings.defaultValue;
 
         _context.DrawRenderers(_cullingResults, ref drawingSettings, 
-        ref filteringSettings);
+            ref filteringSettings);
     }
 #endif
 
+    private void PrepareForSceneWindow () 
+    {
+		ScriptableRenderContext.EmitWorldGeometryForSceneView(_camera);
+	}
 }
