@@ -18,10 +18,9 @@ public class AsteroidsController : MonoBehaviour
     [SerializeField] private Mesh _mesh;
     [SerializeField] private Material _material;
     
-    [SerializeField] private int _childCount = 150;
-    [SerializeField, Range(0, 360)] private int _speedRotation = 80;
+    [SerializeField] private int _asteroidsCount = 150;
+    [SerializeField, Range(0, 360)] private int _speedRotation = 8;
     [SerializeField] private float _radius = 15.0f;
-    [SerializeField] private int _asteroidsCount = 15;
 
     private const float _positionOffset = 1.5f;
     
@@ -40,7 +39,7 @@ public class AsteroidsController : MonoBehaviour
 
         var stride = 16 * 4;
         for (int i = 0, length = 1; 
-            i < _parts.Length; i++, length *= _childCount)
+            i < _parts.Length; i++, length *= _asteroidsCount)
         {
             _parts[i] = new NativeArray<FractalPart>(length, Allocator.Persistent);
             _matrices[i] = new NativeArray<Matrix4x4>(length, Allocator.Persistent);
@@ -56,9 +55,9 @@ public class AsteroidsController : MonoBehaviour
 
 
         var levelParts = _parts[1];
-        for (var fpi = 0; fpi < levelParts.Length; fpi += _childCount)
+        for (var fpi = 0; fpi < levelParts.Length; fpi += _asteroidsCount)
         {
-            for (var ci = 0; ci < _childCount; ci++)
+            for (var ci = 0; ci < _asteroidsCount; ci++)
             {
                 levelParts[fpi + ci] = CreatePart();
             }
@@ -93,7 +92,7 @@ public class AsteroidsController : MonoBehaviour
 
     private FractalPart CreatePart() 
     {
-        Vector3 norm = (new Vector3(Random.value, 0.0f, Random.value)).normalized;
+        Vector3 norm = (new Vector3(Random.value - 0.5f, 0.0f, Random.value - 0.5f)).normalized;
 
         return new FractalPart
         {
@@ -119,7 +118,7 @@ public class AsteroidsController : MonoBehaviour
 
         jobHandle = new UpdateFractalLevel
         {
-            AsteroidsCount = _childCount,
+            AsteroidsCount = _asteroidsCount,
             SpinAngleDelta = spinAngelDelta,
             Parents = _parts[0],
             Parts = _parts[1],

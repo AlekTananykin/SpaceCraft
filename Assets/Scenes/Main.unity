@@ -360,10 +360,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   _material: {fileID: 2100000, guid: 886792465a6962a4784df5b24d4c0161, type: 2}
-  _depth: 2
-  _speedRotation: 140
-  _radius: 150
   _asteroidsCount: 150
+  _speedRotation: 8
+  _radius: 150
 --- !u!4 &69604725
 Transform:
   m_ObjectHideFlags: 0
