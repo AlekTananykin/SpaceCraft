@@ -24,8 +24,8 @@ public class AsteroidsController : MonoBehaviour
     [SerializeField] private int _asteroidsCount = 15;
 
     private const float _positionOffset = 1.5f;
-    private const float _scaleBias = .5f;
-    private int _depth = 2;
+    
+    private const int _depth = 2;
     private NativeArray<FractalPart>[] _parts;
     private NativeArray<Matrix4x4>[] _matrices;
     private ComputeBuffer[] _matricesBuffers;
@@ -37,6 +37,7 @@ public class AsteroidsController : MonoBehaviour
         _parts = new NativeArray<FractalPart>[_depth];
         _matrices = new NativeArray<Matrix4x4>[_depth];
         _matricesBuffers = new ComputeBuffer[_depth];
+
         var stride = 16 * 4;
         for (int i = 0, length = 1; 
             i < _parts.Length; i++, length *= _childCount)
@@ -47,19 +48,22 @@ public class AsteroidsController : MonoBehaviour
             _matricesBuffers[i] = new ComputeBuffer(length, stride);
         }
 
-        _parts[0][0] = CreatePart();
-        for (var li = 1; li < _parts.Length; li++)
+        _parts[0][0] = new FractalPart
         {
-            var levelParts = _parts[li];
+            Direction = Vector3.up,
+            Rotation = Quaternion.identity,
+        };
 
-            for (var fpi = 0; fpi < levelParts.Length; fpi += _childCount)
+
+        var levelParts = _parts[1];
+        for (var fpi = 0; fpi < levelParts.Length; fpi += _childCount)
+        {
+            for (var ci = 0; ci < _childCount; ci++)
             {
-                for (var ci = 0; ci < _childCount; ci++)
-                {
-                    levelParts[fpi + ci] = CreatePart();
-                }
+                levelParts[fpi + ci] = CreatePart();
             }
         }
+
         _propertyBlock ??= new MaterialPropertyBlock();
     }
 
@@ -89,50 +93,40 @@ public class AsteroidsController : MonoBehaviour
 
     private FractalPart CreatePart() 
     {
-        Vector3 norm = (new Vector3(Random.value, Random.value, 0.0f)).normalized;
-
+        Vector3 norm = (new Vector3(Random.value, 0.0f, Random.value)).normalized;
 
         return new FractalPart
         {
-            Direction = norm * _radius,
+            Direction = norm * _radius * (0.9f + 0.2f * Random.value),
             Rotation = Quaternion.Euler(0.0f, Random.value * 360, 0.0f),
         };
-
-        //return new FractalPart
-        //{
-        //    Direction = Vector3.up,
-        //    Rotation = Quaternion.identity,
-        //};
     }
 
     private void Update()
     {
         var spinAngelDelta = _speedRotation * Time.deltaTime;
+        
         var rootPart = _parts[0][0];
+
         rootPart.SpinAngle += spinAngelDelta;
         var deltaRotation = Quaternion.Euler(.0f, rootPart.SpinAngle, .0f);
         rootPart.WorldRotation = rootPart.Rotation * deltaRotation;
         _parts[0][0] = rootPart;
         _matrices[0][0] = Matrix4x4.TRS(rootPart.WorldPosition,
         rootPart.WorldRotation, Vector3.one);
-        var scale = 1.0f;
+        
         JobHandle jobHandle = default;
 
-        for (var li = 1; li < _parts.Length; li++)
+        jobHandle = new UpdateFractalLevel
         {
-            scale *= _scaleBias;
+            AsteroidsCount = _childCount,
+            SpinAngleDelta = spinAngelDelta,
+            Parents = _parts[0],
+            Parts = _parts[1],
 
-            jobHandle = new UpdateFractalLevel
-            {
-                AsteroidsCount = _childCount,
-                SpinAngleDelta = spinAngelDelta,
-                Scale = scale,
-                Parents = _parts[li - 1],
-                Parts = _parts[li],
-                Matrices = _matrices[li]
-            }.Schedule(_parts[li].Length, jobHandle);
-            jobHandle.Complete();
-        }
+            Matrices = _matrices[1]
+        }.Schedule(_parts[1].Length, jobHandle);
+        jobHandle.Complete();
 
         var bounds = new Bounds(rootPart.WorldPosition, 3f * Vector3.one);
         for (var i = 1; i < _matricesBuffers.Length; i++)
@@ -149,7 +143,6 @@ public class AsteroidsController : MonoBehaviour
     private struct UpdateFractalLevel : IJobFor
     {
         public float SpinAngleDelta;
-        public float Scale;
         public int AsteroidsCount;
 
         [ReadOnly]
@@ -161,19 +154,19 @@ public class AsteroidsController : MonoBehaviour
 
         public void Execute(int index)
         {
-            var parent = Parents[index / AsteroidsCount];
+            var parent = Parents[0];
             var part = Parts[index];
 
             part.SpinAngle += SpinAngleDelta;
 
-            part.WorldRotation = parent.WorldRotation *
+            part.WorldRotation =
                 (part.Rotation * Quaternion.Euler(0f, part.SpinAngle, 0f));
             part.WorldPosition = parent.WorldPosition +
-                parent.WorldRotation * (_positionOffset * Scale * part.Direction);
+                parent.WorldRotation * (_positionOffset * part.Direction);
 
             Parts[index] = part;
             Matrices[index] = Matrix4x4.TRS(
-                part.WorldPosition, part.WorldRotation, Scale * Vector3.one);
+                part.WorldPosition, part.WorldRotation, Vector3.one);
         }
     }
 }
