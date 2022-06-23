@@ -54,7 +54,9 @@ public class Star : MonoBehaviour
             }
             _triangles[_triangles.Length - 1] = 1;
         }
+
         _mesh.vertices = _vertices;
+        _mesh.colors = _colors;
         _mesh.triangles = _triangles;
     }
 }
