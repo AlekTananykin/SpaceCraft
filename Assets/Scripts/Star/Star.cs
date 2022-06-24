@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 
+
+[ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class Star : MonoBehaviour
 {

@@ -9,6 +9,16 @@ public class ColorPointDrawer : PropertyDrawer
         label = EditorGUI.BeginProperty(position, label, property);
 
         var contentPosition = EditorGUI.PrefixLabel(position, label);
+        
+
+        if (IsSmallWidth())
+        {
+            position.height = 16f;
+            EditorGUI.indentLevel += 1;
+            contentPosition = EditorGUI.IndentedRect(position);
+            contentPosition.y += 18f;
+        }
+
         contentPosition.width *= 0.75f;
 
         EditorGUI.indentLevel = 0;
@@ -25,5 +35,16 @@ public class ColorPointDrawer : PropertyDrawer
             new GUIContent("C"));
 
         EditorGUI.EndProperty();
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property,
+        GUIContent label)
+    {
+        return IsSmallWidth() ? 16f + 18f : 18f;
+    }
+
+    private static bool IsSmallWidth()
+    {
+        return Screen.width < 419;
     }
 }
