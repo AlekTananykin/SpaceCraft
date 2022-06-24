@@ -18,6 +18,10 @@ public class Star : MonoBehaviour
     private int[] _triangles;
 
 
+    public int Frequency => _frequency;
+    public ColorPoint[] Points => _points;
+
+
     private void Start()
     {
         UpdateMesh();

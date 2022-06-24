@@ -1,5 +1,5 @@
 using UnityEditor;
-
+using UnityEngine;
 
 [CustomEditor(typeof(Star)), CanEditMultipleObjects]
 public class StartEditor : Editor
@@ -7,6 +7,8 @@ public class StartEditor : Editor
     private SerializedProperty _center;
     private SerializedProperty _points;
     private SerializedProperty _frequency;
+
+    private Vector3 _pointSnap;
 
     private void OnEnable()
     {
@@ -37,6 +39,40 @@ public class StartEditor : Editor
 
         if (serializedObject.ApplyModifiedProperties())
             (serializedObject.targetObject as Star)?.UpdateMesh();
+    }
+
+    private void OnSceneGUI()
+    {
+        if (!(target is Star star))
+        {
+            return;
+        }
+
+        var starTransform = star.transform;
+
+        var angle = -360f / (star.Frequency * star.Points.Length);
+
+        for (var i =0; i < star.Points.Length; ++i)
+        {
+            var rotation = Quaternion.Euler(0f, 0f, angle * i);
+            var oldPoint = starTransform.TransformPoint(rotation *
+                star.Points[i].Position);
+
+            var newPoint = Handles.FreeMoveHandle(oldPoint, Quaternion.identity,
+                0.02f, _pointSnap, Handles.DotHandleCap);
+
+            if (oldPoint == newPoint)
+            {
+                continue;
+            }
+
+            star.Points[i].Position = Quaternion.Inverse(rotation) *
+                starTransform.InverseTransformPoint(newPoint);
+
+            star.UpdateMesh();
+
+        }
+
     }
 
 }
