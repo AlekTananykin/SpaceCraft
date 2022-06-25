@@ -37,7 +37,11 @@ public class StartEditor : Editor
                 MessageType.Info);
         }
 
-        if (serializedObject.ApplyModifiedProperties())
+        if (GUILayout.Button("Update Mesh"))
+        {
+            (serializedObject.targetObject as Star)?.UpdateMesh();
+        }
+        else if (serializedObject.ApplyModifiedProperties())
             (serializedObject.targetObject as Star)?.UpdateMesh();
     }
 
@@ -52,7 +56,7 @@ public class StartEditor : Editor
 
         var angle = -360f / (star.Frequency * star.Points.Length);
 
-        for (var i =0; i < star.Points.Length; ++i)
+        for (var i = 0; i < star.Points.Length; ++i)
         {
             var rotation = Quaternion.Euler(0f, 0f, angle * i);
             var oldPoint = starTransform.TransformPoint(rotation *
